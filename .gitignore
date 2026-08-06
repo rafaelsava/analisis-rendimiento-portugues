@@ -1,0 +1,7 @@
+.Rlib/
+.vendor/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj.user/
+
