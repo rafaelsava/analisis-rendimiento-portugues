@@ -4,9 +4,12 @@ subtitle: "Análisis del curso de portugués"
 author: "Proyecto Métodos Estadísticos Avanzados I"
 date: "`r format(Sys.Date(), '%d/%m/%Y')`"
 output:
-  github_document:
+  html_document:
     toc: true
+    toc_float: true
     toc_depth: 3
+    number_sections: true
+    theme: flatly
     fig_width: 9
     fig_height: 5.5
 ---
@@ -38,7 +41,9 @@ tema <- theme_minimal(base_size = 12) +
 pal_sexo <- c("Mujer" = "#B23A70", "Hombre" = "#247BA0")
 ```
 
-# Pregunta de investigación
+# Presentación
+
+## Pregunta de investigación
 
 > **¿Qué relación existe entre salir con amigos, consumir alcohol los fines de semana y el rendimiento académico, considerando el sexo del estudiante?**
 
@@ -53,7 +58,11 @@ El objetivo es describir y cuantificar la asociación entre la frecuencia de sal
 | `Walc` | Consumo de alcohol el fin de semana | Ordinal: 1 = muy bajo, 5 = muy alto |
 | `sex` | Variable de comparación | Nominal: F = mujer, M = hombre |
 
-# Preparación y calidad de los datos
+# Preparación del entorno
+
+Este informe se elaboró en R y R Markdown. Para el análisis y la visualización se utilizaron los paquetes `ggplot2` y `knitr`.
+
+# Carga y revisión del conjunto de datos
 
 ```{r datos}
 datos <- read.csv2(
@@ -247,7 +256,7 @@ ggplot(medias_celda, aes(x = goout, y = Walc, fill = media)) +
 
 **Interpretación.** Este mapa evita atribuir a `goout` una diferencia que podría estar asociada con `Walc`, o viceversa. Las celdas azules tienen medias superiores y las rojas inferiores. Las celdas con un `n` pequeño deben leerse con cautela: una o dos notas pueden mover considerablemente su promedio. El patrón global es más importante que una celda aislada.
 
-# Asociación estadística
+# Asociación estadística y comparación de grupos
 
 ```{r pruebas}
 cor_goout_g3 <- cor.test(datos$goout, datos$G3,
@@ -340,7 +349,7 @@ ggplot(rejilla, aes(x = goout, y = fit, color = sex, fill = sex)) +
 
 **Interpretación.** Las líneas resumen el modelo, manteniendo simultáneamente `goout`, `Walc` y sexo. Líneas casi horizontales representan asociaciones débiles; diferencias claras de inclinación entre mujeres y hombres representarían interacción. Las bandas se amplían en combinaciones poco frecuentes, lo que refleja mayor incertidumbre y evita sobreinterpretar los extremos.
 
-# Biplot de componentes principales
+# Análisis de componentes principales y biplot
 
 El biplot resume conjuntamente `goout`, `Walc` y `G3`. Las variables se estandarizan para que sus diferentes dispersiones sean comparables. Debido a que dos variables son ordinales, el PCA se usa únicamente como **visualización exploratoria**.
 
@@ -420,27 +429,3 @@ La comparación permite comprobar si los ceros dominan la dirección de las asoc
 4. El sexo ayuda a describir posibles diferencias de nivel o pendiente, pero las interacciones del modelo determinan si el patrón cambia de manera estadísticamente apreciable.
 5. El bajo R² del modelo muestra que la mayor parte de la variabilidad del rendimiento se relaciona con otros factores no incluidos en esta pregunta.
 6. Los resultados son asociaciones de una muestra observacional. No permiten afirmar que salir o consumir alcohol **cause** cambios en el rendimiento.
-
-# Guion para video de dos minutos
-
-> **0:00–0:15 — Presentación**  
-> En este estudio analizamos 649 estudiantes del curso de portugués. Nuestra pregunta fue: ¿qué relación existe entre salir con amigos, consumir alcohol los fines de semana y el rendimiento académico, considerando el sexo del estudiante?
->
-> **0:15–0:30 — Variables y calidad**  
-> Utilizamos la nota final, llamada G3, como medida de rendimiento; la frecuencia de salir con amigos, goout; el consumo de alcohol del fin de semana, Walc; y el sexo. La base no tiene datos faltantes ni filas duplicadas, por lo que estaba lista para el análisis.
->
-> **0:30–0:50 — Descripción inicial**  
-> Primero observamos la distribución de las notas por sexo. Las dos distribuciones se superponen ampliamente, aunque sus promedios presentan una pequeña diferencia. También conservamos las quince notas iguales a cero porque son valores permitidos por el diccionario.
->
-> **0:50–1:15 — Resultados principales**  
-> Los diagramas de caja muestran cómo cambia la nota entre los cinco niveles de salir con amigos y de consumo de alcohol. Hay diferencias entre algunos promedios, pero también bastante variabilidad dentro de cada grupo. Además, el mapa de frecuencias muestra que salir y consumir alcohol están relacionados: quienes salen con mayor frecuencia tienden a registrar mayor consumo durante el fin de semana.
->
-> **1:15–1:35 — Modelo y sexo**  
-> Para separar estas relaciones ajustamos un modelo que considera simultáneamente salir, consumir alcohol y el sexo. Las líneas representan el rendimiento esperado y las bandas muestran la incertidumbre. El modelo explica solamente `r round(100*sm$r.squared, 1)` por ciento de la variabilidad de las notas, así que estos comportamientos son solo una parte del rendimiento académico.
->
-> **1:35–1:50 — Biplot**  
-> El biplot resume las tres variables. Las flechas de salir con amigos y consumo de alcohol apuntan en direcciones semejantes, confirmando su asociación. La orientación de la nota final muestra cómo se relaciona el rendimiento con ese patrón, mientras que las elipses comparan los perfiles de mujeres y hombres.
->
-> **1:50–2:00 — Conclusión**  
-> Concluimos que existe una asociación entre los hábitos sociales y el rendimiento, pero es débil y no demuestra causalidad. Otros factores académicos y familiares explican gran parte de las diferencias en las notas.
-
