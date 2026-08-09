@@ -1,360 +1,332 @@
-Salir con amigos, consumo de alcohol y rendimiento académico
+Vida social, ausencias y rendimiento académico
 ================
 Proyecto Métodos Estadísticos Avanzados I
-06/08/2026
+08/08/2026
 
-- [Pregunta de investigación](#pregunta-de-investigación)
-  - [Variables](#variables)
-- [Preparación y calidad de los
-  datos](#preparación-y-calidad-de-los-datos)
-- [Análisis descriptivo](#análisis-descriptivo)
-  - [Figura 1. Distribución de la nota
-    final](#figura-1-distribución-de-la-nota-final)
-  - [Figura 2. Rendimiento según la frecuencia de salir con
-    amigos](#figura-2-rendimiento-según-la-frecuencia-de-salir-con-amigos)
-  - [Figura 3. Rendimiento según el consumo de alcohol del fin de
-    semana](#figura-3-rendimiento-según-el-consumo-de-alcohol-del-fin-de-semana)
-  - [Figura 4. Relación entre salir con amigos y consumir
-    alcohol](#figura-4-relación-entre-salir-con-amigos-y-consumir-alcohol)
-  - [Figura 5. Media de rendimiento para cada
-    combinación](#figura-5-media-de-rendimiento-para-cada-combinación)
-- [Asociación estadística](#asociación-estadística)
-  - [Modelo conjunto considerando el
-    sexo](#modelo-conjunto-considerando-el-sexo)
-  - [Figura 6. Tendencias ajustadas por
-    sexo](#figura-6-tendencias-ajustadas-por-sexo)
-- [Biplot de componentes
-  principales](#biplot-de-componentes-principales)
-- [Análisis de sensibilidad](#análisis-de-sensibilidad)
-- [Conclusiones](#conclusiones)
-- [Guion para video de dos minutos](#guion-para-video-de-dos-minutos)
+# Presentación
 
-# Pregunta de investigación
+## Pregunta de investigación
 
 > **¿Qué relación existe entre salir con amigos, consumir alcohol los
-> fines de semana y el rendimiento académico, considerando el sexo del
-> estudiante?**
+> fines de semana y las ausencias escolares con el rendimiento
+> académico, considerando el sexo del estudiante?**
 
-El objetivo es describir y cuantificar la asociación entre la frecuencia
-de salir con amigos (`goout`), el consumo de alcohol durante el fin de
-semana (`Walc`) y la nota final de portugués (`G3`), diferenciando los
-resultados por sexo (`sex`). Al tratarse de datos observacionales, los
-resultados permiten hablar de **asociaciones**, pero no demostrar
-causalidad.
+El objetivo es describir la asociación entre la frecuencia de salir con
+amigos (`goout`), el consumo de alcohol durante el fin de semana
+(`Walc`), el número de ausencias (`absences`) y la nota final de
+portugués (`G3`), comparando mujeres y hombres. Como los datos son
+observacionales, se habla de **asociación**, no de causalidad.
 
 ## Variables
 
-| Variable | Papel en el análisis | Escala |
+| Variable | Papel | Tipo y escala |
 |:---|:---|:---|
 | `G3` | Rendimiento académico | Cuantitativa discreta, de 0 a 20 |
+| `absences` | Inasistencia escolar | Cuantitativa discreta, número de ausencias |
 | `goout` | Frecuencia de salir con amigos | Ordinal: 1 = muy baja, 5 = muy alta |
 | `Walc` | Consumo de alcohol el fin de semana | Ordinal: 1 = muy bajo, 5 = muy alto |
 | `sex` | Variable de comparación | Nominal: F = mujer, M = hombre |
 
-# Preparación y calidad de los datos
+`G3` y `absences` satisfacen el requisito de incluir al menos dos
+variables cuantitativas. `goout` y `Walc` se conservan como variables
+ordinales, aunque estén codificadas con números.
 
-La base contiene **649 estudiantes**, **35 variables**, **0 datos
-faltantes** y **0 filas exactamente duplicadas**. Los **15 casos con
-nota final igual a cero (2.3%)** se conservan porque el diccionario
-admite calificaciones entre 0 y 20. Más adelante se realiza un análisis
-de sensibilidad para comprobar si esos casos cambian las conclusiones.
+# Carga y revisión de los datos
 
-# Análisis descriptivo
+La base contiene **649 estudiantes**, **33 variables**, **0 datos
+faltantes** y **0 filas exactamente duplicadas**. Se conservaron los
+**15 valores `G3 = 0`** (2.3%), pues pertenecen al rango permitido por
+el diccionario.
 
-| Variable | Media | Mediana | Moda | Minimo | Maximo | Rango | Desviacion | Varianza |
+# Estadística descriptiva
+
+| Variable              | Media | Mediana | Moda | Minimo | Maximo | Rango | Desviacion | Varianza |
+|:----------------------|------:|--------:|-----:|-------:|-------:|------:|-----------:|---------:|
+| Nota final (G3)       | 11.91 |      12 |   11 |      0 |     19 |    19 |       3.23 |    10.44 |
+| Ausencias             |  3.66 |       2 |    0 |      0 |     32 |    32 |       4.64 |    21.54 |
+| Salir con amigos      |  3.18 |       3 |    3 |      1 |      5 |     4 |       1.18 |     1.38 |
+| Alcohol fin de semana |  2.28 |       2 |    1 |      1 |      5 |     4 |       1.28 |     1.65 |
+
+Tabla 1. Resumen de las variables principales
+
+La nota final tiene media **11.91** y mediana **12**. Las ausencias
+presentan media **3.66**, mediana **2** y máximo **32**; la media mayor
+que la mediana anticipa una distribución asimétrica hacia la derecha.
+
+| Sexo | n | Porcentaje | Media_G3 | Mediana_G3 | Media_ausencias | Mediana_ausencias | Media_goout | Media_Walc |
 |:---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Nota final (G3) | 11.91 | 12 | 11 | 0 | 19 | 19 | 3.23 | 10.44 |
-| Salir con amigos (goout) | 3.18 | 3 | 3 | 1 | 5 | 4 | 1.18 | 1.38 |
-| Alcohol fin de semana (Walc) | 2.28 | 2 | 1 | 1 | 5 | 4 | 1.28 | 1.65 |
+| Mujer | 383 | 59 | 12.25 | 12 | 3.58 | 2 | 3.13 | 1.94 |
+| Hombre | 266 | 41 | 11.41 | 11 | 3.78 | 2 | 3.27 | 2.77 |
 
-Resumen de las variables principales
+Tabla 2. Descripción por sexo
 
-| Sexo   |   n | Porcentaje | Media_G3 | Mediana_G3 | DE_G3 | Media_goout | Media_Walc |
-|:-------|----:|-----------:|---------:|-----------:|------:|------------:|-----------:|
-| Mujer  | 383 |         59 |    12.25 |         12 |  3.12 |        3.13 |       1.94 |
-| Hombre | 266 |         41 |    11.41 |         11 |  3.32 |        3.27 |       2.77 |
-
-Descripción por sexo
+Las mujeres representan **59%** de la muestra. Su promedio de `G3` es
+**12.25**, frente a **11.41** en hombres. El promedio de ausencias es
+**3.58** en mujeres y **3.78** en hombres.
 
 ## Figura 1. Distribución de la nota final
 
 <div class="figure">
 
-<img src="figuras_por/distribucion-g3-1.png" alt="Distribución de la nota final de portugués según el sexo." width="100%" />
+<img src="figuras_por/distribucion-g3-1.png" alt="Figura 1. Distribución de la nota final de portugués según el sexo." width="100%" />
 <p class="caption">
 
-Distribución de la nota final de portugués según el sexo.
+Figura 1. Distribución de la nota final de portugués según el sexo.
 </p>
 
 </div>
 
-**Interpretación.** La gráfica permite comparar forma, centro y
-dispersión. La nota media es 12.25 para las mujeres y 11.41 para los
-hombres. Las distribuciones se superponen ampliamente; por tanto,
-cualquier diferencia por sexo debe interpretarse por su magnitud y no
-solo por su significación estadística. También se observa un pequeño
-grupo con `G3 = 0`, válido en la escala pero separado del cuerpo
-principal de notas.
+**Interpretación.** La mayor concentración de notas se encuentra
+aproximadamente entre 10 y 14. La distribución de las mujeres está
+desplazada ligeramente hacia notas mayores: su media supera la de los
+hombres en **0.84 puntos**. Sin embargo, las curvas se superponen
+ampliamente, por lo que el sexo no separa por completo los resultados.
+Los 15 ceros forman un grupo aislado visible en el extremo izquierdo.
 
-## Figura 2. Rendimiento según la frecuencia de salir con amigos
+## Figura 2. Distribución de las ausencias
 
 <div class="figure">
 
-<img src="figuras_por/cajas-goout-1.png" alt="Nota final según la frecuencia de salir con amigos, separada por sexo." width="100%" />
+<img src="figuras_por/distribucion-ausencias-1.png" alt="Figura 2. Distribución de las ausencias escolares según el sexo." width="100%" />
 <p class="caption">
 
-Nota final según la frecuencia de salir con amigos, separada por sexo.
+Figura 2. Distribución de las ausencias escolares según el sexo.
 </p>
 
 </div>
 
-**Interpretación.** Las cajas muestran la variabilidad completa dentro
-de cada nivel. La media pasa de 10.73 en el nivel 1 a 10.87 en el nivel
-5. Sin embargo, existe bastante solapamiento entre grupos: salir con
-mayor frecuencia no determina por sí solo la nota. La separación por
-sexo permite comprobar visualmente si el patrón tiene una dirección
-similar en mujeres y hombres.
+**Interpretación.** En ambos sexos la distribución es asimétrica hacia
+la derecha: muchos estudiantes tienen pocas o ninguna ausencia y pocos
+alcanzan valores altos. La mediana es **2** para mujeres y **2** para
+hombres. El máximo de 32 no es un dato imposible según el diccionario,
+pero sí pertenece a la cola de la distribución.
 
-## Figura 3. Rendimiento según el consumo de alcohol del fin de semana
+## Figura 3. Ausencias y rendimiento
 
 <div class="figure">
 
-<img src="figuras_por/cajas-walc-1.png" alt="Nota final según el consumo de alcohol de fin de semana, separada por sexo." width="100%" />
+<img src="figuras_por/ausencias-g3-1.png" alt="Figura 3. Nota final frente al número de ausencias, por sexo." width="100%" />
 <p class="caption">
 
-Nota final según el consumo de alcohol de fin de semana, separada por
-sexo.
+Figura 3. Nota final frente al número de ausencias, por sexo.
 </p>
 
 </div>
 
-**Interpretación.** La media de `G3` es 12.36 en el nivel 1 y 10.56 en
-el nivel 5. La lectura debe considerar el ancho de las cajas y el tamaño
-desigual de los grupos: los niveles altos de consumo son menos
-frecuentes, especialmente al separar por sexo, de modo que sus medias
-son menos estables.
+| Ausencias | n_mujer | media_mujer | n_hombre | media_hombre |
+|:----------|--------:|------------:|---------:|-------------:|
+| 0         |     142 |       12.59 |      102 |        11.27 |
+| 1-2       |      81 |       12.57 |       41 |        11.51 |
+| 3-5       |      66 |       11.83 |       46 |        11.96 |
+| 6-10      |      66 |       12.02 |       56 |        11.66 |
+| 11 o más  |      28 |       11.18 |       21 |         9.95 |
 
-## Figura 4. Relación entre salir con amigos y consumir alcohol
+Tabla 3. Nota media por tramos de ausencias y sexo
+
+**Interpretación.** La nube es muy dispersa: con un mismo número de
+ausencias aparecen notas distintas. En los tramos de la tabla se observa
+que **12.59** y **11.27** son las medias sin ausencias para mujeres y
+hombres, respectivamente. En el tramo de 11 o más son **11.18** y
+**9.95**. La ausencia de una caída uniforme advierte que la relación no
+es fuerte ni estrictamente lineal.
+
+## Figura 4. Rendimiento y frecuencia de salir con amigos
 
 <div class="figure">
 
-<img src="figuras_por/mapa-frecuencias-1.png" alt="Distribución conjunta de goout y Walc dentro de cada sexo." width="100%" />
+<img src="figuras_por/cajas-goout-1.png" alt="Figura 4. Nota final según la frecuencia de salir con amigos y el sexo." width="100%" />
 <p class="caption">
 
-Distribución conjunta de goout y Walc dentro de cada sexo.
+Figura 4. Nota final según la frecuencia de salir con amigos y el sexo.
 </p>
 
 </div>
 
-**Interpretación.** Las concentraciones de celdas permiten ver qué
-combinaciones son habituales y cuáles tienen pocos casos. La correlación
-de Spearman entre `goout` y `Walc` es **0.372** (\`p \< 0,001). Esto
-indica que quienes reportan salir más también tienden a declarar mayor
-consumo durante el fin de semana. Por ello, las dos variables no deben
-interpretarse de forma aislada.
+| Nivel goout | Sexo   |   n | Media G3 | Media ausencias |
+|:-----------:|:-------|----:|---------:|----------------:|
+|      1      | Mujer  |  31 |    11.23 |            4.68 |
+|      2      | Mujer  |  87 |    12.69 |            3.60 |
+|      3      | Mujer  | 122 |    12.48 |            3.07 |
+|      4      | Mujer  |  88 |    12.28 |            3.75 |
+|      5      | Mujer  |  55 |    11.58 |            3.76 |
+|      1      | Hombre |  17 |     9.82 |            1.41 |
+|      2      | Hombre |  58 |    12.64 |            2.74 |
+|      3      | Hombre |  83 |    11.66 |            3.23 |
+|      4      | Hombre |  53 |    11.45 |            5.68 |
+|      5      | Hombre |  55 |    10.16 |            4.60 |
 
-## Figura 5. Media de rendimiento para cada combinación
+Tabla 4. Promedios por frecuencia de salir y sexo
+
+**Interpretación.** Las cajas se superponen ampliamente y no forman una
+secuencia descendente perfecta. En mujeres, la media más alta aparece en
+`goout = 2` (12.69) y en hombres también (12.64). El nivel 5 desciende a
+11.58 y 10.16, respectivamente. Esto descarta una relación estrictamente
+lineal y muestra que la caída en niveles altos es más visible entre los
+hombres.
+
+## Figura 5. Rendimiento y consumo de fin de semana
 
 <div class="figure">
 
-<img src="figuras_por/mapa-medias-1.png" alt="Nota media para cada combinación de goout y Walc." width="100%" />
+<img src="figuras_por/cajas-walc-1.png" alt="Figura 5. Nota final según consumo de alcohol de fin de semana y sexo." width="100%" />
 <p class="caption">
 
-Nota media para cada combinación de goout y Walc.
+Figura 5. Nota final según consumo de alcohol de fin de semana y sexo.
 </p>
 
 </div>
 
-**Interpretación.** Este mapa evita atribuir a `goout` una diferencia
-que podría estar asociada con `Walc`, o viceversa. Las celdas azules
-tienen medias superiores y las rojas inferiores. Las celdas con un `n`
-pequeño deben leerse con cautela: una o dos notas pueden mover
-considerablemente su promedio. El patrón global es más importante que
-una celda aislada.
+| Nivel Walc | Sexo   |   n | Media G3 | Media ausencias |
+|:----------:|:-------|----:|---------:|----------------:|
+|     1      | Mujer  | 176 |    12.22 |            3.05 |
+|     2      | Mujer  |  99 |    12.24 |            3.67 |
+|     3      | Mujer  |  71 |    12.52 |            4.52 |
+|     4      | Mujer  |  30 |    11.57 |            4.40 |
+|     5      | Mujer  |   7 |    13.43 |            2.43 |
+|     1      | Hombre |  71 |    12.70 |            2.49 |
+|     2      | Hombre |  51 |    12.29 |            3.73 |
+|     3      | Hombre |  49 |    10.43 |            3.00 |
+|     4      | Hombre |  57 |    10.75 |            4.77 |
+|     5      | Hombre |  38 |    10.03 |            5.76 |
 
-# Asociación estadística
+Tabla 5. Promedios por consumo de fin de semana y sexo
 
-| Analisis                     | Estadistico |        p |
-|:-----------------------------|------------:|---------:|
-| Spearman: goout con G3       |      -0.105 |    0,007 |
-| Spearman: Walc con G3        |      -0.171 | \< 0,001 |
-| Kruskal-Wallis: G3 por goout |      19.766 | \< 0,001 |
-| Kruskal-Wallis: G3 por Walc  |      24.297 | \< 0,001 |
+**Interpretación.** En hombres, la media baja de 12.7 en `Walc = 1` a
+10.03 en `Walc = 5`. En mujeres no hay descenso ordenado y el promedio
+de `Walc = 5` es alto, pero ese grupo contiene solo **7 estudiantes**,
+frente a 176 en el nivel 1. Por eso ese extremo no representa una
+tendencia femenina estable. Las ausencias tampoco aumentan uniformemente
+en todos los niveles.
 
-Pruebas bivariadas
-
-Las correlaciones de Spearman son apropiadas porque `goout` y `Walc` son
-escalas ordinales. Kruskal-Wallis contrasta si la distribución de las
-notas es igual en los cinco niveles sin exigir normalidad. Un valor *p*
-pequeño aporta evidencia de diferencias, pero **no mide su importancia
-práctica**; por eso se reportan también las correlaciones y las
-diferencias observadas en las gráficas.
-
-## Modelo conjunto considerando el sexo
-
-Para estimar la asociación parcial de cada comportamiento se ajusta un
-modelo lineal exploratorio. `goout` y `Walc` se usan como escalas de 1 a
-5 para estimar una tendencia promedio por cada incremento de nivel. Se
-incluyen interacciones con el sexo para evaluar si las pendientes
-cambian entre mujeres y hombres.
-
-| Termino | Estimacion | Error_estandar | t | p |
-|:---|---:|---:|---:|---:|
-| Intercepto: mujer, goout=0, Walc=0 | 12.474 | 0.501 | 24.879 | \< 0,001 |
-| Tendencia de goout en mujeres | -0.100 | 0.144 | -0.691 | 0,490 |
-| Tendencia de Walc en mujeres | 0.047 | 0.157 | 0.297 | 0,767 |
-| Diferencia hombre-mujer | 0.744 | 0.762 | 0.977 | 0,329 |
-| Cambio de la pendiente goout en hombres | 0.165 | 0.240 | 0.689 | 0,491 |
-| Cambio de la pendiente Walc en hombres | -0.777 | 0.226 | -3.436 | \< 0,001 |
-
-Modelo lineal: G3 explicado por goout, Walc, sexo e interacciones
-
-El modelo explica **5.6% de la variabilidad de `G3`** (R² ajustado =
-0.049). Por tanto, aunque alguno de los coeficientes sea
-estadísticamente distinto de cero, `goout`, `Walc` y `sex` constituyen
-solo una parte pequeña del rendimiento: hábitos de estudio, antecedentes
-académicos, apoyo y otras variables no incluidas también son relevantes.
-
-La pendiente estimada de `goout` para mujeres es -0.1 puntos de `G3` por
-nivel, y la de `Walc` es 0.047. Para hombres, las pendientes son 0.066 y
--0.731, respectivamente. Las interacciones indican si esas diferencias
-de pendiente reciben apoyo estadístico.
-
-## Figura 6. Tendencias ajustadas por sexo
+## Figura 6. Relación entre salir y consumir alcohol
 
 <div class="figure">
 
-<img src="figuras_por/predicciones-1.png" alt="Predicciones del modelo conjunto para combinaciones de goout y Walc." width="100%" />
+<img src="figuras_por/mapa-frecuencias-1.png" alt="Figura 6. Distribución conjunta de goout y Walc dentro de cada sexo." width="100%" />
 <p class="caption">
 
-Predicciones del modelo conjunto para combinaciones de goout y Walc.
+Figura 6. Distribución conjunta de goout y Walc dentro de cada sexo.
 </p>
 
 </div>
 
-**Interpretación.** Las líneas resumen el modelo, manteniendo
-simultáneamente `goout`, `Walc` y sexo. Líneas casi horizontales
-representan asociaciones débiles; diferencias claras de inclinación
-entre mujeres y hombres representarían interacción. Las bandas se
-amplían en combinaciones poco frecuentes, lo que refleja mayor
-incertidumbre y evita sobreinterpretar los extremos.
+**Interpretación.** Las mayores frecuencias no están distribuidas al
+azar. Entre las mujeres, la celda más frecuente es `goout = 3` y
+`Walc = 1`, con **52 estudiantes**. Entre los hombres es `goout = 2`,
+`Walc = 1`, con **27**. En el extremo `goout = 5`, `Walc = 5` aparecen
+**22 hombres** y solo **4 mujeres**. Esto respalda que los consumos
+altos se concentran con salidas frecuentes y que ese extremo es más
+visible entre los hombres.
 
-# Biplot de componentes principales
+# Asociación estadística y comparación de grupos
 
-El biplot resume conjuntamente `goout`, `Walc` y `G3`. Las variables se
-estandarizan para que sus diferentes dispersiones sean comparables.
-Debido a que dos variables son ordinales, el PCA se usa únicamente como
-**visualización exploratoria**.
+| Relacion          |    Rho |        p |
+|:------------------|-------:|---------:|
+| goout - G3        | -0.105 |  = 0,007 |
+| Walc - G3         | -0.171 | \< 0,001 |
+| Ausencias - G3    | -0.159 | \< 0,001 |
+| goout - Walc      |  0.372 | \< 0,001 |
+| goout - Ausencias |  0.104 |  = 0,008 |
+| Walc - Ausencias  |  0.145 | \< 0,001 |
+
+Tabla 6. Correlaciones de Spearman
+
+La relación más clara entre las variables explicativas es
+`goout - Walc`, con rho = **0.372**. Respecto a `G3`, las correlaciones
+son **-0.105** para `goout`, **-0.171** para `Walc` y **-0.159** para
+ausencias. Sus magnitudes son pequeñas: hay tendencias, pero ninguna
+variable presenta por sí sola una asociación fuerte con las notas.
+
+| Comparacion                       | Prueba         | Estadistico |        p |
+|:----------------------------------|:---------------|------------:|---------:|
+| G3 entre niveles de goout         | Kruskal-Wallis |      19.766 | \< 0,001 |
+| G3 entre niveles de Walc          | Kruskal-Wallis |      24.297 | \< 0,001 |
+| G3 entre mujeres y hombres        | Wilcoxon       |   58916.500 | \< 0,001 |
+| Ausencias entre mujeres y hombres | Wilcoxon       |   49640.500 |  = 0,568 |
+
+Tabla 7. Comparaciones no paramétricas
+
+Kruskal-Wallis indica si la distribución de `G3` difiere entre los cinco
+niveles ordinales. Wilcoxon compara mujeres y hombres sin suponer
+normalidad. La significación estadística debe leerse junto con las
+gráficas y las diferencias observadas: con 649 casos, una diferencia
+pequeña también puede producir un valor *p* bajo.
+
+# Análisis de componentes principales y biplot
+
+El PCA resume conjuntamente `goout`, `Walc`, `absences` y `G3`. Las
+cuatro variables se estandarizan: cada una queda con media 0 y
+desviación estándar 1, evitando que la escala 0-32 de ausencias domine a
+las escalas 1-5.
+
+| Componente | Autovalor | % de variabilidad | % acumulado |
+|:-----------|----------:|------------------:|------------:|
+| CP1        |     1.535 |              38.4 |        38.4 |
+| CP2        |     0.961 |              24.0 |        62.4 |
+| CP3        |     0.908 |              22.7 |        85.1 |
+| CP4        |     0.596 |              14.9 |       100.0 |
+
+Tabla 8. Variabilidad explicada por los componentes principales
+
+## ¿Qué significa el porcentaje de variabilidad explicado?
+
+Al estandarizar cuatro variables, la variabilidad total equivale a **4
+unidades**. El autovalor de cada componente indica cuántas de esas
+unidades resume y su porcentaje se calcula como:
+
+> porcentaje del componente = autovalor del componente / suma de los
+> cuatro autovalores × 100.
+
+La CP1 explica **38.4%**: es la proporción de las diferencias globales
+entre estudiantes que puede verse sobre el eje horizontal. La CP2 añade
+**24%** en una dirección perpendicular, sin repetir la información de
+CP1. Juntas conservan **62.4%** de la variabilidad original; el
+**37.6%** restante queda fuera del plano y pertenece a CP3 y CP4. Por
+eso el biplot es un resumen útil, pero no una representación completa.
 
 <div class="figure">
 
-<img src="figuras_por/biplot-1.png" alt="Biplot de goout, Walc y G3; puntos coloreados por sexo." width="100%" />
+<img src="figuras_por/biplot-1.png" alt="Figura 7. Biplot de goout, Walc, ausencias y G3, coloreado por sexo." width="100%" />
 <p class="caption">
 
-Biplot de goout, Walc y G3; puntos coloreados por sexo.
+Figura 7. Biplot de goout, Walc, ausencias y G3, coloreado por sexo.
 </p>
 
 </div>
 
-|       | Variable |    CP1 |   CP2 |
-|:------|:---------|-------:|------:|
-| goout | goout    | -0.635 | -0.39 |
-| Walc  | Walc     | -0.674 | -0.14 |
-| G3    | G3       |  0.376 | -0.91 |
+|          | Variable              |    CP1 |    CP2 |
+|:---------|:----------------------|-------:|-------:|
+| goout    | Salir con amigos      | -0.581 |  0.486 |
+| Walc     | Alcohol fin de semana | -0.642 |  0.216 |
+| absences | Ausencias             | -0.342 | -0.649 |
+| G3       | Nota G3               |  0.365 |  0.544 |
 
-Cargas de las variables en los dos primeros componentes
+Tabla 9. Cargas de las variables en CP1 y CP2
 
-**Interpretación del biplot.** Flechas en direcciones similares
-representan asociación positiva; flechas opuestas representan asociación
-negativa y flechas cercanas a 90° indican poca relación lineal. La
-proximidad de las flechas `goout` y `Walc` refleja que ambos
-comportamientos tienden a aumentar juntos. La dirección de `G3` respecto
-a ellas muestra si el rendimiento se opone o acompaña ese patrón. La
-superposición de las elipses indica cuánto se parecen los perfiles
-multivariados de mujeres y hombres. Los dos primeros componentes
-explican conjuntamente **80%** de la variabilidad estandarizada.
-
-# Análisis de sensibilidad
-
-| Muestra               |   n | Pendiente_goout_mujer | Pendiente_Walc_mujer |    R2 |
-|:----------------------|----:|----------------------:|---------------------:|------:|
-| Todos los estudiantes | 649 |                 -0.10 |                0.047 | 0.056 |
-| Excluyendo G3 = 0     | 634 |                 -0.03 |                0.070 | 0.069 |
-
-Sensibilidad de los resultados ante las notas finales iguales a cero
-
-La comparación permite comprobar si los ceros dominan la dirección de
-las asociaciones. Si las pendientes conservan su signo y una magnitud
-parecida, la conclusión es estable. Si cambian notablemente, debe
-informarse que los resultados dependen de cómo se trate a quienes
-obtuvieron cero.
+**Interpretación del biplot.** Las flechas de `Salir` y `Alcohol`
+apuntan en direcciones próximas, en concordancia con su correlación
+positiva. `Nota G3` se proyecta parcialmente en dirección contraria,
+coherente con las asociaciones negativas débiles. `Ausencias` forma un
+ángulo distinto y aporta información que no queda recogida por completo
+en el eje de vida social. Las elipses se superponen ampliamente: los
+perfiles multivariados de mujeres y hombres no constituyen grupos
+separados. Esta lectura se limita al **62.4%** visible en CP1 y CP2.
 
 # Conclusiones
 
-1.  `goout` y `Walc` están relacionados entre sí; quienes salen más
-    tienden a reportar mayor consumo de alcohol durante el fin de
-    semana.
-2.  La asociación de cada comportamiento con `G3` debe evaluarse
-    conjuntamente, ya que analizarlos por separado puede confundir sus
-    efectos descriptivos.
-3.  Las diferencias visuales entre niveles presentan solapamiento
-    considerable: estos hábitos no permiten predecir por sí solos la
-    nota de un estudiante.
-4.  El sexo ayuda a describir posibles diferencias de nivel o pendiente,
-    pero las interacciones del modelo determinan si el patrón cambia de
-    manera estadísticamente apreciable.
-5.  El bajo R² del modelo muestra que la mayor parte de la variabilidad
-    del rendimiento se relaciona con otros factores no incluidos en esta
-    pregunta.
-6.  Los resultados son asociaciones de una muestra observacional. No
-    permiten afirmar que salir o consumir alcohol **cause** cambios en
-    el rendimiento.
-
-# Guion para video de dos minutos
-
-> **0:00–0:15 — Presentación**  
-> En este estudio analizamos 649 estudiantes del curso de portugués.
-> Nuestra pregunta fue: ¿qué relación existe entre salir con amigos,
-> consumir alcohol los fines de semana y el rendimiento académico,
-> considerando el sexo del estudiante?
->
-> **0:15–0:30 — Variables y calidad**  
-> Utilizamos la nota final, llamada G3, como medida de rendimiento; la
-> frecuencia de salir con amigos, goout; el consumo de alcohol del fin
-> de semana, Walc; y el sexo. La base no tiene datos faltantes ni filas
-> duplicadas, por lo que estaba lista para el análisis.
->
-> **0:30–0:50 — Descripción inicial**  
-> Primero observamos la distribución de las notas por sexo. Las dos
-> distribuciones se superponen ampliamente, aunque sus promedios
-> presentan una pequeña diferencia. También conservamos las quince notas
-> iguales a cero porque son valores permitidos por el diccionario.
->
-> **0:50–1:15 — Resultados principales**  
-> Los diagramas de caja muestran cómo cambia la nota entre los cinco
-> niveles de salir con amigos y de consumo de alcohol. Hay diferencias
-> entre algunos promedios, pero también bastante variabilidad dentro de
-> cada grupo. Además, el mapa de frecuencias muestra que salir y
-> consumir alcohol están relacionados: quienes salen con mayor
-> frecuencia tienden a registrar mayor consumo durante el fin de semana.
->
-> **1:15–1:35 — Modelo y sexo**  
-> Para separar estas relaciones ajustamos un modelo que considera
-> simultáneamente salir, consumir alcohol y el sexo. Las líneas
-> representan el rendimiento esperado y las bandas muestran la
-> incertidumbre. El modelo explica solamente 5.6 por ciento de la
-> variabilidad de las notas, así que estos comportamientos son solo una
-> parte del rendimiento académico.
->
-> **1:35–1:50 — Biplot**  
-> El biplot resume las tres variables. Las flechas de salir con amigos y
-> consumo de alcohol apuntan en direcciones semejantes, confirmando su
-> asociación. La orientación de la nota final muestra cómo se relaciona
-> el rendimiento con ese patrón, mientras que las elipses comparan los
-> perfiles de mujeres y hombres.
->
-> **1:50–2:00 — Conclusión**  
-> Concluimos que existe una asociación entre los hábitos sociales y el
-> rendimiento, pero es débil y no demuestra causalidad. Otros factores
-> académicos y familiares explican gran parte de las diferencias en las
-> notas.
+1.  Salir con amigos y consumir alcohol los fines de semana presentan la
+    asociación más clara entre las variables estudiadas.
+2.  `goout`, `Walc` y `absences` muestran asociaciones débiles con la
+    nota final; ninguna permite anticipar por sí sola el rendimiento
+    individual.
+3.  Las notas de las mujeres son ligeramente mayores en promedio, pero
+    las distribuciones de ambos sexos se superponen ampliamente.
+4.  El patrón entre consumo y nota parece más marcado entre los hombres,
+    mientras que entre las mujeres es menos regular.
+5.  Las ausencias son muy asimétricas y su relación con `G3` no es
+    uniforme: existen notas altas y bajas incluso con cantidades
+    similares de ausencias.
+6.  El PCA comprime cuatro variables en dos ejes y conserva 62.4% de su
+    variabilidad; el porcentaje restante no se observa en el biplot.
+7.  Los resultados describen asociaciones de una base observacional y no
+    demuestran que estos comportamientos causen cambios en las notas.

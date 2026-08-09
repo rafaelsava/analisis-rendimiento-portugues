@@ -1,10 +1,10 @@
-# Rendimiento académico, vida social y consumo de alcohol
+# Rendimiento académico, vida social, alcohol y ausencias
 
-Análisis reproducible en R Markdown de la relación entre salir con amigos (`goout`), consumir alcohol durante los fines de semana (`Walc`) y el rendimiento académico (`G3`), considerando el sexo del estudiante.
+Análisis descriptivo reproducible en R Markdown de la relación entre salir con amigos (`goout`), consumir alcohol durante los fines de semana (`Walc`), las ausencias escolares (`absences`) y el rendimiento académico (`G3`), considerando el sexo del estudiante.
 
 ## Pregunta de investigación
 
-> ¿Qué relación existe entre salir con amigos, consumir alcohol los fines de semana y el rendimiento académico, considerando el sexo del estudiante?
+> ¿Qué relación existe entre salir con amigos, consumir alcohol los fines de semana y las ausencias escolares con el rendimiento académico, considerando el sexo del estudiante?
 
 ## Datos
 
@@ -13,9 +13,10 @@ El análisis principal utiliza `student/student-por.csv`, con 649 estudiantes y 
 ## Resultados principales
 
 - La frecuencia de salir con amigos y el consumo de alcohol de fin de semana están positivamente asociados.
-- Las asociaciones bivariadas con la nota final son negativas, pero débiles: rho de Spearman de -0,105 para `goout` y -0,171 para `Walc`.
-- En el modelo conjunto, la asociación ajustada entre `Walc` y `G3` es prácticamente nula en mujeres y negativa en hombres, con una interacción estadísticamente significativa.
-- El modelo explica 5,6 % de la variabilidad de la nota; los resultados describen asociaciones y no prueban causalidad.
+- Las asociaciones de `goout`, `Walc` y `absences` con la nota final son débiles.
+- Las distribuciones se comparan por sexo mediante tablas, gráficos y pruebas no paramétricas.
+- El PCA resume `goout`, `Walc`, `absences` y `G3`, e incluye una explicación explícita del porcentaje de variabilidad conservado por cada componente.
+- Los resultados describen asociaciones y no prueban causalidad.
 
 ## Archivos principales
 
@@ -34,4 +35,3 @@ rmarkdown::render("analisis_rendimiento_por.Rmd")
 ```
 
 El informe conserva las notas finales iguales a cero porque son válidas según el diccionario e incluye un análisis de sensibilidad sin esos registros.
-

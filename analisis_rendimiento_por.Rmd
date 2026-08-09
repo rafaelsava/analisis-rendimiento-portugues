@@ -1,6 +1,6 @@
 ---
-title: "Salir con amigos, consumo de alcohol y rendimiento académico"
-subtitle: "Análisis del curso de portugués"
+title: "Vida social, ausencias y rendimiento académico"
+subtitle: "Análisis descriptivo del curso de portugués"
 author: "Proyecto Métodos Estadísticos Avanzados I"
 date: "`r format(Sys.Date(), '%d/%m/%Y')`"
 output:
@@ -39,30 +39,31 @@ tema <- theme_minimal(base_size = 12) +
   )
 
 pal_sexo <- c("Mujer" = "#B23A70", "Hombre" = "#247BA0")
+formato_p <- function(p) ifelse(p < 0.001, "< 0,001",
+                                paste0("= ", format(round(p, 3), decimal.mark = ",")))
 ```
 
 # Presentación
 
 ## Pregunta de investigación
 
-> **¿Qué relación existe entre salir con amigos, consumir alcohol los fines de semana y el rendimiento académico, considerando el sexo del estudiante?**
+> **¿Qué relación existe entre salir con amigos, consumir alcohol los fines de semana y las ausencias escolares con el rendimiento académico, considerando el sexo del estudiante?**
 
-El objetivo es describir y cuantificar la asociación entre la frecuencia de salir con amigos (`goout`), el consumo de alcohol durante el fin de semana (`Walc`) y la nota final de portugués (`G3`), diferenciando los resultados por sexo (`sex`). Al tratarse de datos observacionales, los resultados permiten hablar de **asociaciones**, pero no demostrar causalidad.
+El objetivo es describir la asociación entre la frecuencia de salir con amigos (`goout`), el consumo de alcohol durante el fin de semana (`Walc`), el número de ausencias (`absences`) y la nota final de portugués (`G3`), comparando mujeres y hombres. Como los datos son observacionales, se habla de **asociación**, no de causalidad.
 
 ## Variables
 
-| Variable | Papel en el análisis | Escala |
+| Variable | Papel | Tipo y escala |
 |:--|:--|:--|
 | `G3` | Rendimiento académico | Cuantitativa discreta, de 0 a 20 |
+| `absences` | Inasistencia escolar | Cuantitativa discreta, número de ausencias |
 | `goout` | Frecuencia de salir con amigos | Ordinal: 1 = muy baja, 5 = muy alta |
 | `Walc` | Consumo de alcohol el fin de semana | Ordinal: 1 = muy bajo, 5 = muy alto |
 | `sex` | Variable de comparación | Nominal: F = mujer, M = hombre |
 
-# Preparación del entorno
+`G3` y `absences` satisfacen el requisito de incluir al menos dos variables cuantitativas. `goout` y `Walc` se conservan como variables ordinales, aunque estén codificadas con números.
 
-Este informe se elaboró en R y R Markdown. Para el análisis y la visualización se utilizaron los paquetes `ggplot2` y `knitr`.
-
-# Carga y revisión del conjunto de datos
+# Carga y revisión de los datos
 
 ```{r datos}
 datos <- read.csv2(
@@ -70,9 +71,9 @@ datos <- read.csv2(
   stringsAsFactors = FALSE,
   na.strings = c("", "NA", "N/A", "?", ".")
 )
+n_variables_originales <- ncol(datos)
 
-datos$sex <- factor(datos$sex,
-                    levels = c("F", "M"),
+datos$sex <- factor(datos$sex, levels = c("F", "M"),
                     labels = c("Mujer", "Hombre"))
 datos$goout_f <- factor(datos$goout, levels = 1:5, ordered = TRUE)
 datos$Walc_f <- factor(datos$Walc, levels = 1:5, ordered = TRUE)
@@ -83,9 +84,9 @@ duplicados <- sum(duplicated(datos))
 ceros_g3 <- sum(datos$G3 == 0)
 ```
 
-La base contiene **`r n` estudiantes**, **`r ncol(datos)` variables**, **`r faltantes` datos faltantes** y **`r duplicados` filas exactamente duplicadas**. Los **`r ceros_g3` casos con nota final igual a cero (`r round(100*ceros_g3/n, 1)`%)** se conservan porque el diccionario admite calificaciones entre 0 y 20. Más adelante se realiza un análisis de sensibilidad para comprobar si esos casos cambian las conclusiones.
+La base contiene **`r n` estudiantes**, **`r n_variables_originales` variables**, **`r faltantes` datos faltantes** y **`r duplicados` filas exactamente duplicadas**. Se conservaron los **`r ceros_g3` valores `G3 = 0`** (`r round(100*ceros_g3/n, 1)`%), pues pertenecen al rango permitido por el diccionario.
 
-# Análisis descriptivo
+# Estadística descriptiva
 
 ```{r tabla-general}
 moda <- function(x) {
@@ -93,23 +94,25 @@ moda <- function(x) {
   ux[which.max(tabulate(match(x, ux)))]
 }
 
+vars_resumen <- c("G3", "absences", "goout", "Walc")
 resumen_general <- data.frame(
-  Variable = c("Nota final (G3)", "Salir con amigos (goout)",
-               "Alcohol fin de semana (Walc)"),
-  Media = sapply(datos[c("G3", "goout", "Walc")], mean),
-  Mediana = sapply(datos[c("G3", "goout", "Walc")], median),
-  Moda = sapply(datos[c("G3", "goout", "Walc")], moda),
-  Minimo = sapply(datos[c("G3", "goout", "Walc")], min),
-  Maximo = sapply(datos[c("G3", "goout", "Walc")], max),
-  Rango = sapply(datos[c("G3", "goout", "Walc")], function(x) diff(range(x))),
-  Desviacion = sapply(datos[c("G3", "goout", "Walc")], sd),
-  Varianza = sapply(datos[c("G3", "goout", "Walc")], var),
+  Variable = c("Nota final (G3)", "Ausencias", "Salir con amigos", "Alcohol fin de semana"),
+  Media = sapply(datos[vars_resumen], mean),
+  Mediana = sapply(datos[vars_resumen], median),
+  Moda = sapply(datos[vars_resumen], moda),
+  Minimo = sapply(datos[vars_resumen], min),
+  Maximo = sapply(datos[vars_resumen], max),
+  Rango = sapply(datos[vars_resumen], function(x) diff(range(x))),
+  Desviacion = sapply(datos[vars_resumen], sd),
+  Varianza = sapply(datos[vars_resumen], var),
   row.names = NULL
 )
 resumen_general[-1] <- lapply(resumen_general[-1], function(x) round(x, 2))
 kable(resumen_general, align = c("l", rep("r", 8)),
-      caption = "Resumen de las variables principales")
+      caption = "Tabla 1. Resumen de las variables principales")
 ```
+
+La nota final tiene media **`r round(mean(datos$G3), 2)`** y mediana **`r median(datos$G3)`**. Las ausencias presentan media **`r round(mean(datos$absences), 2)`**, mediana **`r median(datos$absences)`** y máximo **`r max(datos$absences)`**; la media mayor que la mediana anticipa una distribución asimétrica hacia la derecha.
 
 ```{r tabla-sexo}
 resumen_sexo <- do.call(rbind, lapply(levels(datos$sex), function(s) {
@@ -120,22 +123,25 @@ resumen_sexo <- do.call(rbind, lapply(levels(datos$sex), function(s) {
     Porcentaje = round(100*nrow(d)/n, 1),
     Media_G3 = round(mean(d$G3), 2),
     Mediana_G3 = median(d$G3),
-    DE_G3 = round(sd(d$G3), 2),
+    Media_ausencias = round(mean(d$absences), 2),
+    Mediana_ausencias = median(d$absences),
     Media_goout = round(mean(d$goout), 2),
     Media_Walc = round(mean(d$Walc), 2)
   )
 }))
-kable(resumen_sexo, align = c("l", rep("r", 7)),
-      caption = "Descripción por sexo")
+kable(resumen_sexo, align = c("l", rep("r", 8)),
+      caption = "Tabla 2. Descripción por sexo")
 ```
+
+Las mujeres representan **`r resumen_sexo$Porcentaje[resumen_sexo$Sexo == "Mujer"]`%** de la muestra. Su promedio de `G3` es **`r resumen_sexo$Media_G3[resumen_sexo$Sexo == "Mujer"]`**, frente a **`r resumen_sexo$Media_G3[resumen_sexo$Sexo == "Hombre"]`** en hombres. El promedio de ausencias es **`r resumen_sexo$Media_ausencias[resumen_sexo$Sexo == "Mujer"]`** en mujeres y **`r resumen_sexo$Media_ausencias[resumen_sexo$Sexo == "Hombre"]`** en hombres.
 
 ## Figura 1. Distribución de la nota final
 
-```{r distribucion-g3, fig.cap="Distribución de la nota final de portugués según el sexo."}
+```{r distribucion-g3, fig.cap="Figura 1. Distribución de la nota final de portugués según el sexo."}
 ggplot(datos, aes(x = G3, fill = sex, color = sex)) +
   geom_histogram(aes(y = after_stat(density)), binwidth = 1,
                  alpha = 0.28, position = "identity") +
-  geom_density(linewidth = 1, alpha = 0.08) +
+  geom_density(linewidth = 1, alpha = 0.06) +
   geom_vline(data = aggregate(G3 ~ sex, datos, mean),
              aes(xintercept = G3, color = sex),
              linetype = "dashed", linewidth = 0.8) +
@@ -144,64 +150,121 @@ ggplot(datos, aes(x = G3, fill = sex, color = sex)) +
   scale_x_continuous(breaks = seq(0, 20, 2), limits = c(0, 20)) +
   labs(title = "Distribución de la nota final",
        subtitle = "Las líneas discontinuas indican la media de cada sexo",
-       x = "Nota final (G3)", y = "Densidad") +
-  tema
+       x = "Nota final (G3)", y = "Densidad") + tema
 ```
 
-**Interpretación.** La gráfica permite comparar forma, centro y dispersión. La nota media es `r resumen_sexo$Media_G3[resumen_sexo$Sexo == "Mujer"]` para las mujeres y `r resumen_sexo$Media_G3[resumen_sexo$Sexo == "Hombre"]` para los hombres. Las distribuciones se superponen ampliamente; por tanto, cualquier diferencia por sexo debe interpretarse por su magnitud y no solo por su significación estadística. También se observa un pequeño grupo con `G3 = 0`, válido en la escala pero separado del cuerpo principal de notas.
+**Interpretación.** La mayor concentración de notas se encuentra aproximadamente entre 10 y 14. La distribución de las mujeres está desplazada ligeramente hacia notas mayores: su media supera la de los hombres en **`r round(diff(rev(resumen_sexo$Media_G3)), 2)` puntos**. Sin embargo, las curvas se superponen ampliamente, por lo que el sexo no separa por completo los resultados. Los 15 ceros forman un grupo aislado visible en el extremo izquierdo.
 
-## Figura 2. Rendimiento según la frecuencia de salir con amigos
+## Figura 2. Distribución de las ausencias
 
-```{r cajas-goout, fig.cap="Nota final según la frecuencia de salir con amigos, separada por sexo."}
+```{r distribucion-ausencias, fig.cap="Figura 2. Distribución de las ausencias escolares según el sexo."}
+ggplot(datos, aes(x = absences, fill = sex)) +
+  geom_histogram(binwidth = 2, color = "white", boundary = 0) +
+  facet_wrap(~ sex, ncol = 2, scales = "free_y") +
+  scale_fill_manual(values = pal_sexo, guide = "none") +
+  scale_x_continuous(breaks = seq(0, 32, 4)) +
+  labs(title = "Distribución del número de ausencias",
+       subtitle = "Histogramas separados para evitar ocultar diferencias de frecuencia",
+       x = NULL, y = "Estudiantes") + tema
+```
+
+**Interpretación.** En ambos sexos la distribución es asimétrica hacia la derecha: muchos estudiantes tienen pocas o ninguna ausencia y pocos alcanzan valores altos. La mediana es **`r resumen_sexo$Mediana_ausencias[resumen_sexo$Sexo == "Mujer"]`** para mujeres y **`r resumen_sexo$Mediana_ausencias[resumen_sexo$Sexo == "Hombre"]`** para hombres. El máximo de `r max(datos$absences)` no es un dato imposible según el diccionario, pero sí pertenece a la cola de la distribución.
+
+## Figura 3. Ausencias y rendimiento
+
+```{r ausencias-g3, fig.cap="Figura 3. Nota final frente al número de ausencias, por sexo."}
+medias_tramos <- transform(datos,
+  tramo = cut(absences, breaks = c(-1, 0, 2, 5, 10, Inf),
+              labels = c("0", "1-2", "3-5", "6-10", "11 o más")))
+medias_tramos <- aggregate(G3 ~ tramo + sex, medias_tramos,
+                           function(x) c(media = mean(x), n = length(x)))
+medias_tramos <- data.frame(
+  tramo = medias_tramos$tramo, sex = medias_tramos$sex,
+  media = medias_tramos$G3[, "media"], n = medias_tramos$G3[, "n"])
+
+ggplot(datos, aes(x = absences, y = G3, color = sex)) +
+  geom_jitter(alpha = 0.25, width = 0.25, height = 0.18, size = 1.5) +
+  facet_wrap(~ sex) +
+  scale_color_manual(values = pal_sexo, guide = "none") +
+  scale_x_continuous(breaks = seq(0, 32, 4)) +
+  scale_y_continuous(breaks = seq(0, 20, 2), limits = c(0, 20)) +
+  labs(title = "Ausencias y nota final",
+       subtitle = "Cada punto representa un estudiante",
+       x = "Número de ausencias", y = "Nota final (G3)") + tema
+```
+
+```{r tabla-tramos}
+tabla_tramos <- reshape(medias_tramos[, c("tramo", "sex", "n", "media")],
+                        idvar = "tramo", timevar = "sex", direction = "wide")
+names(tabla_tramos) <- c("Ausencias", "n_mujer", "media_mujer",
+                         "n_hombre", "media_hombre")
+tabla_tramos[c("media_mujer", "media_hombre")] <-
+  lapply(tabla_tramos[c("media_mujer", "media_hombre")], round, 2)
+kable(tabla_tramos, align = c("l", rep("r", 4)),
+      caption = "Tabla 3. Nota media por tramos de ausencias y sexo")
+```
+
+**Interpretación.** La nube es muy dispersa: con un mismo número de ausencias aparecen notas distintas. En los tramos de la tabla se observa que **`r tabla_tramos$media_mujer[tabla_tramos$Ausencias == "0"]`** y **`r tabla_tramos$media_hombre[tabla_tramos$Ausencias == "0"]`** son las medias sin ausencias para mujeres y hombres, respectivamente. En el tramo de 11 o más son **`r tabla_tramos$media_mujer[tabla_tramos$Ausencias == "11 o más"]`** y **`r tabla_tramos$media_hombre[tabla_tramos$Ausencias == "11 o más"]`**. La ausencia de una caída uniforme advierte que la relación no es fuerte ni estrictamente lineal.
+
+## Figura 4. Rendimiento y frecuencia de salir con amigos
+
+```{r cajas-goout, fig.cap="Figura 4. Nota final según la frecuencia de salir con amigos y el sexo."}
 ggplot(datos, aes(x = goout_f, y = G3, fill = sex)) +
-  geom_boxplot(width = 0.68, outlier.alpha = 0.45, position = position_dodge(0.75)) +
+  geom_boxplot(width = 0.68, outlier.alpha = 0.45,
+               position = position_dodge(0.75)) +
   stat_summary(fun = mean, geom = "point", shape = 23, size = 2.3,
                fill = "white", color = "black",
                position = position_dodge(0.75)) +
   scale_fill_manual(values = pal_sexo, name = "Sexo") +
   scale_y_continuous(breaks = seq(0, 20, 2), limits = c(0, 20)) +
   labs(title = "Nota final y frecuencia de salir con amigos",
-       subtitle = "Punto blanco: media; línea central de la caja: mediana",
-       x = "Salir con amigos: 1 = muy poco, 5 = mucho",
-       y = "Nota final (G3)") +
-  tema
+       subtitle = "Punto blanco: media; línea de la caja: mediana",
+       x = "Salir con amigos: 1 = muy poco, 5 = mucho", y = "Nota final") + tema
 ```
 
-```{r calculos-goout, include=FALSE}
-medias_goout <- aggregate(G3 ~ goout, datos, function(x) c(n=length(x), media=mean(x), mediana=median(x)))
-media_goout_1 <- mean(datos$G3[datos$goout == 1])
-media_goout_5 <- mean(datos$G3[datos$goout == 5])
+```{r tabla-goout}
+tabla_goout <- aggregate(cbind(G3, absences) ~ goout_f + sex, datos,
+                         function(x) round(mean(x), 2))
+tabla_goout$n <- as.vector(table(datos$goout_f, datos$sex))
+tabla_goout <- tabla_goout[, c("goout_f", "sex", "n", "G3", "absences")]
+kable(tabla_goout, align = c("c", "l", "r", "r", "r"),
+      col.names = c("Nivel goout", "Sexo", "n", "Media G3", "Media ausencias"),
+      caption = "Tabla 4. Promedios por frecuencia de salir y sexo")
 ```
 
-**Interpretación.** Las cajas muestran la variabilidad completa dentro de cada nivel. La media pasa de `r round(media_goout_1, 2)` en el nivel 1 a `r round(media_goout_5, 2)` en el nivel 5. Sin embargo, existe bastante solapamiento entre grupos: salir con mayor frecuencia no determina por sí solo la nota. La separación por sexo permite comprobar visualmente si el patrón tiene una dirección similar en mujeres y hombres.
+**Interpretación.** Las cajas se superponen ampliamente y no forman una secuencia descendente perfecta. En mujeres, la media más alta aparece en `goout = 2` (`r tabla_goout$G3[tabla_goout$goout_f == 2 & tabla_goout$sex == "Mujer"]`) y en hombres también (`r tabla_goout$G3[tabla_goout$goout_f == 2 & tabla_goout$sex == "Hombre"]`). El nivel 5 desciende a `r tabla_goout$G3[tabla_goout$goout_f == 5 & tabla_goout$sex == "Mujer"]` y `r tabla_goout$G3[tabla_goout$goout_f == 5 & tabla_goout$sex == "Hombre"]`, respectivamente. Esto descarta una relación estrictamente lineal y muestra que la caída en niveles altos es más visible entre los hombres.
 
-## Figura 3. Rendimiento según el consumo de alcohol del fin de semana
+## Figura 5. Rendimiento y consumo de fin de semana
 
-```{r cajas-walc, fig.cap="Nota final según el consumo de alcohol de fin de semana, separada por sexo."}
+```{r cajas-walc, fig.cap="Figura 5. Nota final según consumo de alcohol de fin de semana y sexo."}
 ggplot(datos, aes(x = Walc_f, y = G3, fill = sex)) +
-  geom_boxplot(width = 0.68, outlier.alpha = 0.45, position = position_dodge(0.75)) +
+  geom_boxplot(width = 0.68, outlier.alpha = 0.45,
+               position = position_dodge(0.75)) +
   stat_summary(fun = mean, geom = "point", shape = 23, size = 2.3,
                fill = "white", color = "black",
                position = position_dodge(0.75)) +
   scale_fill_manual(values = pal_sexo, name = "Sexo") +
   scale_y_continuous(breaks = seq(0, 20, 2), limits = c(0, 20)) +
-  labs(title = "Nota final y consumo de alcohol en fin de semana",
-       subtitle = "Punto blanco: media; línea central de la caja: mediana",
-       x = "Consumo: 1 = muy bajo, 5 = muy alto",
-       y = "Nota final (G3)") +
-  tema
+  labs(title = "Nota final y alcohol durante el fin de semana",
+       subtitle = "Punto blanco: media; línea de la caja: mediana",
+       x = "Consumo: 1 = muy bajo, 5 = muy alto", y = "Nota final") + tema
 ```
 
-```{r calculos-walc, include=FALSE}
-media_walc_1 <- mean(datos$G3[datos$Walc == 1])
-media_walc_5 <- mean(datos$G3[datos$Walc == 5])
+```{r tabla-walc}
+tabla_walc <- aggregate(cbind(G3, absences) ~ Walc_f + sex, datos,
+                        function(x) round(mean(x), 2))
+tabla_walc$n <- as.vector(table(datos$Walc_f, datos$sex))
+tabla_walc <- tabla_walc[, c("Walc_f", "sex", "n", "G3", "absences")]
+kable(tabla_walc, align = c("c", "l", "r", "r", "r"),
+      col.names = c("Nivel Walc", "Sexo", "n", "Media G3", "Media ausencias"),
+      caption = "Tabla 5. Promedios por consumo de fin de semana y sexo")
 ```
 
-**Interpretación.** La media de `G3` es `r round(media_walc_1, 2)` en el nivel 1 y `r round(media_walc_5, 2)` en el nivel 5. La lectura debe considerar el ancho de las cajas y el tamaño desigual de los grupos: los niveles altos de consumo son menos frecuentes, especialmente al separar por sexo, de modo que sus medias son menos estables.
+**Interpretación.** En hombres, la media baja de `r tabla_walc$G3[tabla_walc$Walc_f == 1 & tabla_walc$sex == "Hombre"]` en `Walc = 1` a `r tabla_walc$G3[tabla_walc$Walc_f == 5 & tabla_walc$sex == "Hombre"]` en `Walc = 5`. En mujeres no hay descenso ordenado y el promedio de `Walc = 5` es alto, pero ese grupo contiene solo **`r tabla_walc$n[tabla_walc$Walc_f == 5 & tabla_walc$sex == "Mujer"]` estudiantes**, frente a `r tabla_walc$n[tabla_walc$Walc_f == 1 & tabla_walc$sex == "Mujer"]` en el nivel 1. Por eso ese extremo no representa una tendencia femenina estable. Las ausencias tampoco aumentan uniformemente en todos los niveles.
 
-## Figura 4. Relación entre salir con amigos y consumir alcohol
+## Figura 6. Relación entre salir y consumir alcohol
 
-```{r mapa-frecuencias, fig.cap="Distribución conjunta de goout y Walc dentro de cada sexo."}
+```{r mapa-frecuencias, fig.cap="Figura 6. Distribución conjunta de goout y Walc dentro de cada sexo."}
 frecuencias <- as.data.frame(xtabs(~ goout_f + Walc_f + sex, data = datos))
 names(frecuencias) <- c("goout", "Walc", "sex", "n")
 frecuencias$porc_sexo <- ave(frecuencias$n, frecuencias$sex,
@@ -212,152 +275,92 @@ ggplot(frecuencias, aes(x = goout, y = Walc, fill = porc_sexo)) +
   geom_text(aes(label = ifelse(n == 0, "", n)), size = 3.2) +
   facet_wrap(~ sex) +
   scale_fill_gradient(low = "#F5F7FA", high = "#C0392B",
-                      name = "% dentro\ndel sexo") +
-  labs(title = "¿Salir con amigos y consumir alcohol aparecen juntos?",
+                      name = "% dentro del sexo",
+                      guide = guide_colorbar(title.position = "top",
+                                             barwidth = unit(5.5, "cm"),
+                                             barheight = unit(0.35, "cm"))) +
+  labs(title = "Salir con amigos y consumir alcohol aparecen asociados",
        subtitle = "Cada celda muestra el número de estudiantes",
-       x = "Frecuencia de salir con amigos",
-       y = "Consumo de alcohol en fin de semana") +
-  tema
+       x = "Frecuencia de salir con amigos", y = "Consumo de fin de semana") + tema
 ```
 
-```{r asociacion-goout-walc, include=FALSE}
-cor_goout_walc <- cor.test(datos$goout, datos$Walc,
-                           method = "spearman", exact = FALSE)
-```
-
-**Interpretación.** Las concentraciones de celdas permiten ver qué combinaciones son habituales y cuáles tienen pocos casos. La correlación de Spearman entre `goout` y `Walc` es **`r round(unname(cor_goout_walc$estimate), 3)`** (`p `r ifelse(cor_goout_walc$p.value < .001, "< 0,001", paste0("= ", format(round(cor_goout_walc$p.value, 3), decimal.mark=",")))`). Esto indica que quienes reportan salir más también tienden a declarar mayor consumo durante el fin de semana. Por ello, las dos variables no deben interpretarse de forma aislada.
-
-## Figura 5. Media de rendimiento para cada combinación
-
-```{r mapa-medias, fig.cap="Nota media para cada combinación de goout y Walc."}
-medias_celda <- aggregate(G3 ~ goout_f + Walc_f + sex, datos,
-                          function(x) c(media = mean(x), n = length(x)))
-medias_celda <- data.frame(
-  goout = medias_celda$goout_f,
-  Walc = medias_celda$Walc_f,
-  sex = medias_celda$sex,
-  media = medias_celda$G3[, "media"],
-  n = medias_celda$G3[, "n"]
-)
-
-ggplot(medias_celda, aes(x = goout, y = Walc, fill = media)) +
-  geom_tile(color = "white", linewidth = 0.5) +
-  geom_text(aes(label = paste0(round(media, 1), "\n(n=", n, ")")), size = 2.8) +
-  facet_wrap(~ sex) +
-  scale_fill_gradient2(low = "#B2182B", mid = "#F7F7F7", high = "#2166AC",
-                       midpoint = mean(datos$G3), limits = range(datos$G3),
-                       name = "Media G3") +
-  labs(title = "Rendimiento medio por combinación de comportamientos",
-       subtitle = "Se muestra la media y el tamaño de cada celda",
-       x = "Frecuencia de salir con amigos",
-       y = "Consumo de alcohol en fin de semana") +
-  tema
-```
-
-**Interpretación.** Este mapa evita atribuir a `goout` una diferencia que podría estar asociada con `Walc`, o viceversa. Las celdas azules tienen medias superiores y las rojas inferiores. Las celdas con un `n` pequeño deben leerse con cautela: una o dos notas pueden mover considerablemente su promedio. El patrón global es más importante que una celda aislada.
+**Interpretación.** Las mayores frecuencias no están distribuidas al azar. Entre las mujeres, la celda más frecuente es `goout = 3` y `Walc = 1`, con **52 estudiantes**. Entre los hombres es `goout = 2`, `Walc = 1`, con **27**. En el extremo `goout = 5`, `Walc = 5` aparecen **22 hombres** y solo **4 mujeres**. Esto respalda que los consumos altos se concentran con salidas frecuentes y que ese extremo es más visible entre los hombres.
 
 # Asociación estadística y comparación de grupos
 
 ```{r pruebas}
-cor_goout_g3 <- cor.test(datos$goout, datos$G3,
-                         method = "spearman", exact = FALSE)
-cor_walc_g3 <- cor.test(datos$Walc, datos$G3,
-                        method = "spearman", exact = FALSE)
+pares <- list(
+  c("goout", "G3"), c("Walc", "G3"), c("absences", "G3"),
+  c("goout", "Walc"), c("goout", "absences"), c("Walc", "absences")
+)
+etiquetas_pares <- c("goout - G3", "Walc - G3", "Ausencias - G3",
+                     "goout - Walc", "goout - Ausencias", "Walc - Ausencias")
+resultados_cor <- do.call(rbind, lapply(seq_along(pares), function(i) {
+  x <- datos[[pares[[i]][1]]]; y <- datos[[pares[[i]][2]]]
+  prueba <- cor.test(x, y, method = "spearman", exact = FALSE)
+  data.frame(Relacion = etiquetas_pares[i],
+             Rho = round(unname(prueba$estimate), 3),
+             p = formato_p(prueba$p.value))
+}))
+kable(resultados_cor, align = c("l", "r", "r"),
+      caption = "Tabla 6. Correlaciones de Spearman")
+```
+
+La relación más clara entre las variables explicativas es `goout - Walc`, con rho = **`r resultados_cor$Rho[resultados_cor$Relacion == "goout - Walc"]`**. Respecto a `G3`, las correlaciones son **`r resultados_cor$Rho[resultados_cor$Relacion == "goout - G3"]`** para `goout`, **`r resultados_cor$Rho[resultados_cor$Relacion == "Walc - G3"]`** para `Walc` y **`r resultados_cor$Rho[resultados_cor$Relacion == "Ausencias - G3"]`** para ausencias. Sus magnitudes son pequeñas: hay tendencias, pero ninguna variable presenta por sí sola una asociación fuerte con las notas.
+
+```{r comparaciones}
 kw_goout <- kruskal.test(G3 ~ goout_f, data = datos)
 kw_walc <- kruskal.test(G3 ~ Walc_f, data = datos)
+wilcox_g3 <- wilcox.test(G3 ~ sex, data = datos, exact = FALSE)
+wilcox_abs <- wilcox.test(absences ~ sex, data = datos, exact = FALSE)
 
-pruebas <- data.frame(
-  Analisis = c("Spearman: goout con G3", "Spearman: Walc con G3",
-               "Kruskal-Wallis: G3 por goout", "Kruskal-Wallis: G3 por Walc"),
-  Estadistico = c(unname(cor_goout_g3$estimate), unname(cor_walc_g3$estimate),
-                  unname(kw_goout$statistic), unname(kw_walc$statistic)),
-  p = c(cor_goout_g3$p.value, cor_walc_g3$p.value,
-        kw_goout$p.value, kw_walc$p.value)
+comparaciones <- data.frame(
+  Comparacion = c("G3 entre niveles de goout", "G3 entre niveles de Walc",
+                  "G3 entre mujeres y hombres", "Ausencias entre mujeres y hombres"),
+  Prueba = c("Kruskal-Wallis", "Kruskal-Wallis", "Wilcoxon", "Wilcoxon"),
+  Estadistico = round(c(kw_goout$statistic, kw_walc$statistic,
+                        wilcox_g3$statistic, wilcox_abs$statistic), 3),
+  p = c(formato_p(kw_goout$p.value), formato_p(kw_walc$p.value),
+        formato_p(wilcox_g3$p.value), formato_p(wilcox_abs$p.value))
 )
-pruebas$Estadistico <- round(pruebas$Estadistico, 3)
-pruebas$p <- ifelse(pruebas$p < .001, "< 0,001",
-                    format(round(pruebas$p, 3), decimal.mark = ","))
-kable(pruebas, align = c("l", "r", "r"),
-      caption = "Pruebas bivariadas")
+kable(comparaciones, align = c("l", "l", "r", "r"),
+      caption = "Tabla 7. Comparaciones no paramétricas")
 ```
 
-Las correlaciones de Spearman son apropiadas porque `goout` y `Walc` son escalas ordinales. Kruskal-Wallis contrasta si la distribución de las notas es igual en los cinco niveles sin exigir normalidad. Un valor *p* pequeño aporta evidencia de diferencias, pero **no mide su importancia práctica**; por eso se reportan también las correlaciones y las diferencias observadas en las gráficas.
-
-## Modelo conjunto considerando el sexo
-
-Para estimar la asociación parcial de cada comportamiento se ajusta un modelo lineal exploratorio. `goout` y `Walc` se usan como escalas de 1 a 5 para estimar una tendencia promedio por cada incremento de nivel. Se incluyen interacciones con el sexo para evaluar si las pendientes cambian entre mujeres y hombres.
-
-```{r modelo}
-modelo <- lm(G3 ~ goout + Walc + sex + goout:sex + Walc:sex, data = datos)
-sm <- summary(modelo)
-coeficientes <- as.data.frame(sm$coefficients)
-coeficientes$Termino <- row.names(coeficientes)
-row.names(coeficientes) <- NULL
-names(coeficientes)[1:4] <- c("Estimacion", "Error_estandar", "t", "p")
-coeficientes <- coeficientes[, c("Termino", "Estimacion", "Error_estandar", "t", "p")]
-etiquetas <- c(
-  "(Intercept)" = "Intercepto: mujer, goout=0, Walc=0",
-  "goout" = "Tendencia de goout en mujeres",
-  "Walc" = "Tendencia de Walc en mujeres",
-  "sexHombre" = "Diferencia hombre-mujer",
-  "goout:sexHombre" = "Cambio de la pendiente goout en hombres",
-  "Walc:sexHombre" = "Cambio de la pendiente Walc en hombres"
-)
-coeficientes$Termino <- unname(etiquetas[coeficientes$Termino])
-coeficientes[c("Estimacion", "Error_estandar", "t")] <-
-  lapply(coeficientes[c("Estimacion", "Error_estandar", "t")], round, 3)
-coeficientes$p <- ifelse(coeficientes$p < .001, "< 0,001",
-                         format(round(coeficientes$p, 3), decimal.mark = ","))
-kable(coeficientes, align = c("l", rep("r", 4)),
-      caption = "Modelo lineal: G3 explicado por goout, Walc, sexo e interacciones")
-```
-
-El modelo explica **`r round(100*sm$r.squared, 1)`% de la variabilidad de `G3`** (R² ajustado = `r round(sm$adj.r.squared, 3)`). Por tanto, aunque alguno de los coeficientes sea estadísticamente distinto de cero, `goout`, `Walc` y `sex` constituyen solo una parte pequeña del rendimiento: hábitos de estudio, antecedentes académicos, apoyo y otras variables no incluidas también son relevantes.
-
-La pendiente estimada de `goout` para mujeres es `r round(coef(modelo)["goout"], 3)` puntos de `G3` por nivel, y la de `Walc` es `r round(coef(modelo)["Walc"], 3)`. Para hombres, las pendientes son `r round(coef(modelo)["goout"] + coef(modelo)["goout:sexHombre"], 3)` y `r round(coef(modelo)["Walc"] + coef(modelo)["Walc:sexHombre"], 3)`, respectivamente. Las interacciones indican si esas diferencias de pendiente reciben apoyo estadístico.
-
-## Figura 6. Tendencias ajustadas por sexo
-
-```{r predicciones, fig.cap="Predicciones del modelo conjunto para combinaciones de goout y Walc."}
-rejilla <- expand.grid(
-  goout = 1:5,
-  Walc = c(1, 3, 5),
-  sex = levels(datos$sex)
-)
-pred <- predict(modelo, newdata = rejilla, interval = "confidence")
-rejilla <- cbind(rejilla, pred)
-rejilla$Walc_etiqueta <- factor(rejilla$Walc,
-  levels = c(1, 3, 5),
-  labels = c("Walc 1: muy bajo", "Walc 3: medio", "Walc 5: muy alto"))
-
-ggplot(rejilla, aes(x = goout, y = fit, color = sex, fill = sex)) +
-  geom_ribbon(aes(ymin = lwr, ymax = upr, group = interaction(sex, Walc_etiqueta)),
-              alpha = 0.10, color = NA) +
-  geom_line(linewidth = 1) +
-  geom_point(size = 2) +
-  facet_wrap(~ Walc_etiqueta) +
-  scale_color_manual(values = pal_sexo, name = "Sexo") +
-  scale_fill_manual(values = pal_sexo, name = "Sexo") +
-  scale_x_continuous(breaks = 1:5) +
-  coord_cartesian(ylim = c(7, 15)) +
-  labs(title = "Rendimiento esperado al considerar las variables conjuntamente",
-       subtitle = "Bandas: intervalos de confianza del 95% para la media",
-       x = "Frecuencia de salir con amigos",
-       y = "Nota final estimada") +
-  tema
-```
-
-**Interpretación.** Las líneas resumen el modelo, manteniendo simultáneamente `goout`, `Walc` y sexo. Líneas casi horizontales representan asociaciones débiles; diferencias claras de inclinación entre mujeres y hombres representarían interacción. Las bandas se amplían en combinaciones poco frecuentes, lo que refleja mayor incertidumbre y evita sobreinterpretar los extremos.
+Kruskal-Wallis indica si la distribución de `G3` difiere entre los cinco niveles ordinales. Wilcoxon compara mujeres y hombres sin suponer normalidad. La significación estadística debe leerse junto con las gráficas y las diferencias observadas: con 649 casos, una diferencia pequeña también puede producir un valor *p* bajo.
 
 # Análisis de componentes principales y biplot
 
-El biplot resume conjuntamente `goout`, `Walc` y `G3`. Las variables se estandarizan para que sus diferentes dispersiones sean comparables. Debido a que dos variables son ordinales, el PCA se usa únicamente como **visualización exploratoria**.
+El PCA resume conjuntamente `goout`, `Walc`, `absences` y `G3`. Las cuatro variables se estandarizan: cada una queda con media 0 y desviación estándar 1, evitando que la escala 0-32 de ausencias domine a las escalas 1-5.
 
-```{r biplot, fig.cap="Biplot de goout, Walc y G3; puntos coloreados por sexo."}
-pca <- prcomp(datos[, c("goout", "Walc", "G3")], center = TRUE, scale. = TRUE)
+```{r pca-calculos}
+variables_pca <- datos[, c("goout", "Walc", "absences", "G3")]
+pca <- prcomp(variables_pca, center = TRUE, scale. = TRUE)
+var_exp <- 100*(pca$sdev^2/sum(pca$sdev^2))
+tabla_varianza <- data.frame(
+  Componente = paste0("CP", seq_along(var_exp)),
+  Autovalor = round(pca$sdev^2, 3),
+  Porcentaje = round(var_exp, 1),
+  Acumulado = round(cumsum(var_exp), 1)
+)
+kable(tabla_varianza, align = c("l", "r", "r", "r"),
+      col.names = c("Componente", "Autovalor", "% de variabilidad", "% acumulado"),
+      caption = "Tabla 8. Variabilidad explicada por los componentes principales")
+```
+
+## ¿Qué significa el porcentaje de variabilidad explicado?
+
+Al estandarizar cuatro variables, la variabilidad total equivale a **4 unidades**. El autovalor de cada componente indica cuántas de esas unidades resume y su porcentaje se calcula como:
+
+> porcentaje del componente = autovalor del componente / suma de los cuatro autovalores × 100.
+
+La CP1 explica **`r round(var_exp[1], 1)`%**: es la proporción de las diferencias globales entre estudiantes que puede verse sobre el eje horizontal. La CP2 añade **`r round(var_exp[2], 1)`%** en una dirección perpendicular, sin repetir la información de CP1. Juntas conservan **`r round(sum(var_exp[1:2]), 1)`%** de la variabilidad original; el **`r round(100-sum(var_exp[1:2]), 1)`%** restante queda fuera del plano y pertenece a CP3 y CP4. Por eso el biplot es un resumen útil, pero no una representación completa.
+
+```{r biplot, fig.cap="Figura 7. Biplot de goout, Walc, ausencias y G3, coloreado por sexo."}
 scores <- data.frame(pca$x[, 1:2], sex = datos$sex)
 cargas <- data.frame(pca$rotation[, 1:2], Variable = row.names(pca$rotation))
-var_exp <- 100*(pca$sdev^2/sum(pca$sdev^2))
+etiquetas_cargas <- c(goout = "Salir", Walc = "Alcohol", absences = "Ausencias", G3 = "Nota G3")
+cargas$Etiqueta <- etiquetas_cargas[cargas$Variable]
 
 escala_flechas <- 0.32 * min(
   diff(range(scores$PC1))/diff(range(cargas$PC1)),
@@ -365,6 +368,8 @@ escala_flechas <- 0.32 * min(
 )
 cargas$xend <- cargas$PC1 * escala_flechas
 cargas$yend <- cargas$PC2 * escala_flechas
+cargas$label_x <- 1.14*cargas$xend + c(-0.12, -0.10, -0.08, 0.20)
+cargas$label_y <- 1.14*cargas$yend + c(0.18, -0.10, -0.18, 0.16)
 
 ggplot(scores, aes(PC1, PC2, color = sex)) +
   geom_hline(yintercept = 0, color = "grey80") +
@@ -377,55 +382,34 @@ ggplot(scores, aes(PC1, PC2, color = sex)) +
                inherit.aes = FALSE, arrow = arrow(length = unit(0.20, "cm")),
                color = "#222222", linewidth = 0.8) +
   geom_text(data = cargas,
-            aes(x = 1.12*xend, y = 1.12*yend, label = Variable),
+            aes(x = label_x, y = label_y, label = Etiqueta),
             inherit.aes = FALSE, fontface = "bold", color = "#222222") +
   scale_color_manual(values = pal_sexo, name = "Sexo") +
-  labs(title = "Biplot de comportamientos y rendimiento",
-       subtitle = "Elipses: regiones de concentración del 80% por sexo",
-       x = paste0("CP1 (", round(var_exp[1], 1), "% de varianza)"),
-       y = paste0("CP2 (", round(var_exp[2], 1), "% de varianza)")) +
-  coord_equal() +
-  tema
+  labs(title = "Biplot de vida social, ausencias y rendimiento",
+       subtitle = "Elipses: concentración del 80% de cada sexo",
+       x = paste0("CP1 (", round(var_exp[1], 1), "%)"),
+       y = paste0("CP2 (", round(var_exp[2], 1), "%)")) +
+  coord_equal() + tema
 ```
 
 ```{r cargas-pca}
 cargas_tabla <- data.frame(
-  Variable = row.names(pca$rotation),
+  Variable = c("Salir con amigos", "Alcohol fin de semana", "Ausencias", "Nota G3"),
   CP1 = round(pca$rotation[, 1], 3),
   CP2 = round(pca$rotation[, 2], 3)
 )
 kable(cargas_tabla, align = c("l", "r", "r"),
-      caption = "Cargas de las variables en los dos primeros componentes")
+      caption = "Tabla 9. Cargas de las variables en CP1 y CP2")
 ```
 
-**Interpretación del biplot.** Flechas en direcciones similares representan asociación positiva; flechas opuestas representan asociación negativa y flechas cercanas a 90° indican poca relación lineal. La proximidad de las flechas `goout` y `Walc` refleja que ambos comportamientos tienden a aumentar juntos. La dirección de `G3` respecto a ellas muestra si el rendimiento se opone o acompaña ese patrón. La superposición de las elipses indica cuánto se parecen los perfiles multivariados de mujeres y hombres. Los dos primeros componentes explican conjuntamente **`r round(sum(var_exp[1:2]), 1)`%** de la variabilidad estandarizada.
-
-# Análisis de sensibilidad
-
-```{r sensibilidad}
-datos_sin_cero <- datos[datos$G3 > 0, ]
-modelo_sin_cero <- lm(G3 ~ goout + Walc + sex + goout:sex + Walc:sex,
-                      data = datos_sin_cero)
-
-sensibilidad <- data.frame(
-  Muestra = c("Todos los estudiantes", "Excluyendo G3 = 0"),
-  n = c(nrow(datos), nrow(datos_sin_cero)),
-  Pendiente_goout_mujer = c(coef(modelo)["goout"], coef(modelo_sin_cero)["goout"]),
-  Pendiente_Walc_mujer = c(coef(modelo)["Walc"], coef(modelo_sin_cero)["Walc"]),
-  R2 = c(summary(modelo)$r.squared, summary(modelo_sin_cero)$r.squared)
-)
-sensibilidad[-c(1,2)] <- lapply(sensibilidad[-c(1,2)], round, 3)
-kable(sensibilidad, align = c("l", "r", "r", "r", "r"),
-      caption = "Sensibilidad de los resultados ante las notas finales iguales a cero")
-```
-
-La comparación permite comprobar si los ceros dominan la dirección de las asociaciones. Si las pendientes conservan su signo y una magnitud parecida, la conclusión es estable. Si cambian notablemente, debe informarse que los resultados dependen de cómo se trate a quienes obtuvieron cero.
+**Interpretación del biplot.** Las flechas de `Salir` y `Alcohol` apuntan en direcciones próximas, en concordancia con su correlación positiva. `Nota G3` se proyecta parcialmente en dirección contraria, coherente con las asociaciones negativas débiles. `Ausencias` forma un ángulo distinto y aporta información que no queda recogida por completo en el eje de vida social. Las elipses se superponen ampliamente: los perfiles multivariados de mujeres y hombres no constituyen grupos separados. Esta lectura se limita al **`r round(sum(var_exp[1:2]), 1)`%** visible en CP1 y CP2.
 
 # Conclusiones
 
-1. `goout` y `Walc` están relacionados entre sí; quienes salen más tienden a reportar mayor consumo de alcohol durante el fin de semana.
-2. La asociación de cada comportamiento con `G3` debe evaluarse conjuntamente, ya que analizarlos por separado puede confundir sus efectos descriptivos.
-3. Las diferencias visuales entre niveles presentan solapamiento considerable: estos hábitos no permiten predecir por sí solos la nota de un estudiante.
-4. El sexo ayuda a describir posibles diferencias de nivel o pendiente, pero las interacciones del modelo determinan si el patrón cambia de manera estadísticamente apreciable.
-5. El bajo R² del modelo muestra que la mayor parte de la variabilidad del rendimiento se relaciona con otros factores no incluidos en esta pregunta.
-6. Los resultados son asociaciones de una muestra observacional. No permiten afirmar que salir o consumir alcohol **cause** cambios en el rendimiento.
+1. Salir con amigos y consumir alcohol los fines de semana presentan la asociación más clara entre las variables estudiadas.
+2. `goout`, `Walc` y `absences` muestran asociaciones débiles con la nota final; ninguna permite anticipar por sí sola el rendimiento individual.
+3. Las notas de las mujeres son ligeramente mayores en promedio, pero las distribuciones de ambos sexos se superponen ampliamente.
+4. El patrón entre consumo y nota parece más marcado entre los hombres, mientras que entre las mujeres es menos regular.
+5. Las ausencias son muy asimétricas y su relación con `G3` no es uniforme: existen notas altas y bajas incluso con cantidades similares de ausencias.
+6. El PCA comprime cuatro variables en dos ejes y conserva `r round(sum(var_exp[1:2]), 1)`% de su variabilidad; el porcentaje restante no se observa en el biplot.
+7. Los resultados describen asociaciones de una base observacional y no demuestran que estos comportamientos causen cambios en las notas.
